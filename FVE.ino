@@ -91,6 +91,9 @@ void setup() {
   rpiKom.begin(9600);
   Wire.begin();
 
+  if(!tsl.begin()){
+    Serial.println("Senzor intenzity nefunkční!");
+  }
 
   ina219I.begin();
   ina2191.begin();
@@ -141,8 +144,15 @@ void loop() {
   Serial.print("napětí zátěže: "); Serial.print(zatezVI); Serial.println(" V");
   Serial.print("proud: "); Serial.print(proudI); Serial.println(" mA");
 
+
   sensors_event_t event;
   tsl.getEvent(&event);
+
+  if(event.light){
+    Serial.print("Senzor intenzity světla: "); Serial.print(event.light); Serial.println(" Lux");
+  }else{
+    Serial.println("Senzor intenzity světla přetížen!");  
+  }
 
   rpiKom.println("new");
 
