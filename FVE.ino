@@ -7,14 +7,13 @@
 Adafruit_TSL2561_Unified tsl = Adafruit_TSL2561_Unified(TSL2561_ADDR_FLOAT,0x39);
 Adafruit_INA219 ina219I(0x40); // Senzor intenzity
 Adafruit_INA219 ina2191(0x41);
-Adafruit_INA219 ina2192(0x42);
-Adafruit_INA219 ina2193(0x43);
-Adafruit_INA219 ina2194(0x44);
+Adafruit_INA219 ina2192(0x44);
 
 
-class fotorezistor {
-  protected:
-    int pin;
+
+class fotorezistor {  
+  protected:  
+    int pin;  
 
   public:
     int rezistivita;
@@ -63,32 +62,30 @@ class motor {
     }
 };
 
-// Fotorezistory (A0 - A3)
-fotorezistor fotorezistorNP(A0);  // Nahoře vpravo
-fotorezistor fotorezistorNL(A1);  // Nahoře vlevo
-fotorezistor fotorezistorDP(A2);  // Dole vpravo
-fotorezistor fotorezistorDL(A3);  // Dole vlevo
+// Fotorezistory (A1 - A4)
+fotorezistor fotorezistorP(A1);  // Vpravo
+fotorezistor fotorezistorN(A3);  // Nahoře 
+fotorezistor fotorezistorD(A2);  // Dole 
+fotorezistor fotorezistorL(A4);  // Vlevo
 
 // Motory (piny pro řízení směru + PWM)
 motor motorX1(5, 6, 9);
 motor motorX2(7, 8, 10);
 motor motorY1(11, 12, 3);
 
-float rozdilNahore;
-float rozdilDole;
-float rozdilVpravo;
-float rozdilVlevo;
+float rozdilX;
+float rozdilY;
 
 float nepresnost = 1.2;
 
-const byte rpiRx = 2;
-const byte rpiTx = 3;
-
-SoftwareSerial rpiKom(rpiRx, rpiTx);
-
 void setup() {
+
+  pinMode(A0, INPUT);
+  pinMode(A1, INPUT);
+  pinMode(A2, INPUT);
+  pinMode(A3, INPUT);
+
   Serial.begin(9600);
-  rpiKom.begin(9600);
   Wire.begin();
 
   if(!tsl.begin()){
@@ -98,11 +95,6 @@ void setup() {
   ina219I.begin();
   ina2191.begin();
   ina2192.begin();
-  ina2193.begin();
-
-
-  pinMode(rpiRx, INPUT);
-  pinMode(rpiTx, OUTPUT);
 
   
 }
@@ -119,7 +111,7 @@ void loop() {
 
   
 
-  float vstupVI = ina219I.getBusVoltage_V();     // Vstupní napětí senzoru 
+ /* float vstupVI = ina219I.getBusVoltage_V();     // Vstupní napětí senzoru 
   float bocniVI = ina219I.getShuntVoltage_mV();  // Boční (shunt) napětí senzoru 
   float zatezVI = vstupVI + (bocniVI/1000);       // Napětí zátěže
   float proudI = ina219I.getCurrent_mA();        // Proud senzoru  
@@ -134,12 +126,7 @@ void loop() {
   float zatezV2 = vstupV2 + (bocniV2/1000);       // Napětí zátěže
   float proud2 = ina2192.getCurrent_mA();        // Proud senzoru   
 
-   float vstupV3 = ina2193.getBusVoltage_V();     // Vstupní napětí senzoru 
-  float bocniV3 = ina2193.getShuntVoltage_mV();  // Boční (shunt) napětí senzoru 
-  float zatezV3 = vstupV3 + (bocniV3/1000);       // Napětí zátěže
-  float proud3 = ina2193.getCurrent_mA();        // Proud senzoru  
-
-  Serial.print("vstupní napětí: "); Serial.print(vstupVI); Serial.println(" V");
+  Serial.print("vstupní napětí: "); Serial.print(vstupVI*1000); Serial.println(" mV");
   Serial.print("napětí na bočníku: "); Serial.print(bocniVI); Serial.println(" mV");
   Serial.print("napětí zátěže: "); Serial.print(zatezVI); Serial.println(" V");
   Serial.print("proud: "); Serial.print(proudI); Serial.println(" mA");
@@ -154,34 +141,38 @@ void loop() {
     Serial.println("Senzor intenzity světla přetížen!");  
   }
 
-  rpiKom.println("new");
-
   if(event.light){
-    rpiKom.println(event.light);
+    Serial.println(event.light);
   }else{
-    rpiKom.println(NULL);
+    Serial.println(NULL);
   }
-  rpiKom.println(vstupVI);
-  rpiKom.println(bocniVI);
-  rpiKom.println(zatezVI);
-  rpiKom.println(proudI);
+  Serial.println(vstupVI);
+  Serial.println(bocniVI);
+  Serial.println(zatezVI);
+  Serial.println(proudI);
 
-  rpiKom.println(vstupV1);
-  rpiKom.println(bocniV1);
-  rpiKom.println(zatezV1);
-  rpiKom.println(proud1);
+  Serial.println(vstupV1);
+  Serial.println(bocniV1);
+  Serial.println(zatezV1);
+  Serial.println(proud1);
 
-  rpiKom.println(vstupV2);
-  rpiKom.println(bocniV2);
-  rpiKom.println(zatezV2);
-  rpiKom.println(proud2);
+  Serial.println(vstupV2);
+  Serial.println(bocniV2);
+  Serial.println(zatezV2);
+  Serial.println(proud2);*/
 
-  rpiKom.println(vstupV3);
-  rpiKom.println(bocniV3);
-  rpiKom.println(zatezV3);
-  rpiKom.println(proud3);
+  prectiVsechnySenzory();
 
-  delay(500);
+  Serial.print("N: "); Serial.println(fotorezistorN.rezistivita);
+  Serial.print("D: "); Serial.println(fotorezistorD.rezistivita);
+  Serial.print("L: "); Serial.println(fotorezistorL.rezistivita);
+  Serial.print("P: "); Serial.println(fotorezistorP.rezistivita);
+  Serial.print("RX: "); Serial.println(rozdilX);
+  Serial.print("RY: "); Serial.println(rozdilY);
+
+
+
+  delay(300);
  /* while (rozdilVpravo / rozdilVlevo > nepresnost) {
     motorX1.jedDopredu(100);
     motorX2.jedDopredu(100);
@@ -208,15 +199,13 @@ void loop() {
 }
 
 void prectiVsechnySenzory() {
-  fotorezistorNP.ctiSenzor();
-  fotorezistorNL.ctiSenzor();
-  fotorezistorDP.ctiSenzor();
-  fotorezistorDL.ctiSenzor();
+  fotorezistorN.ctiSenzor();
+  fotorezistorD.ctiSenzor();
+  fotorezistorL.ctiSenzor();
+  fotorezistorP.ctiSenzor();
 
-  rozdilNahore = fotorezistorNP.rezistivita - fotorezistorNL.rezistivita;
-  rozdilDole = fotorezistorDP.rezistivita - fotorezistorDL.rezistivita;
-  rozdilVpravo = fotorezistorNP.rezistivita - fotorezistorDP.rezistivita;
-  rozdilVlevo = fotorezistorNL.rezistivita - fotorezistorDL.rezistivita;
+  rozdilX = fotorezistorL.rezistivita - fotorezistorP.rezistivita;
+  rozdilY = fotorezistorN.rezistivita - fotorezistorD.rezistivita;
 }
 
 void zastavVsechnyMotory() {
