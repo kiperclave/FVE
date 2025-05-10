@@ -3,13 +3,18 @@
 #include <Adafruit_TSL2561_U.h>
 #include <Adafruit_INA219.h>
 #include <SoftwareSerial.h>
+#include <SCServo.h>
+
 
 Adafruit_TSL2561_Unified tsl = Adafruit_TSL2561_Unified(TSL2561_ADDR_FLOAT,0x39);
 Adafruit_INA219 ina219I(0x40); // Senzor intenzity
 Adafruit_INA219 ina2191(0x41);
 Adafruit_INA219 ina2192(0x44);
 
+#define S_RXD
+#define S_TXD
 
+SMS_STS st;
 
 class fotorezistor {  
   protected:  
@@ -29,36 +34,33 @@ class fotorezistor {
 
 class motor {
   protected:
-    int pin1;
-    int pin2;
-    int pinPWM;
+    int id
+    int pozice
+    int rychlost
+
+    void prectiPozici(){
+      this->pozice = st.ReadPos(id);
+    }
 
   public:
-    motor(int p1, int p2, int pwm) {
-      pin1 = p1;
-      pin2 = p2;
-      pinPWM = pwm;
-      pinMode(pin1, OUTPUT);
-      pinMode(pin2, OUTPUT);
-      pinMode(pinPWM, OUTPUT);
+    motor(int id) {
+      this->id = id;
     }
 
-    void jedDopredu(int rychlost = 0) {
-      digitalWrite(pin1, LOW);
-      digitalWrite(pin2, HIGH);
-      analogWrite(pinPWM, rychlost);
+    void zmenRychlost(int rychlost){
+      this->rychlost = rychlost;
     }
 
-    void jedDozadu(int rychlost = 0) {
-      digitalWrite(pin1, HIGH);
-      digitalWrite(pin2, LOW);
-      analogWrite(pinPWM, rychlost);
+    void jedDopredu() {
+      st.WritePosEx(id, (pozice+100), rychlost, 50);
+    }
+
+    void jedDozadu() {
+      st.WritePosEx(id, (pozice-100), rychlost, 50);
     }
 
     void zastav() {
-      digitalWrite(pin1, LOW);
-      digitalWrite(pin2, LOW);
-      analogWrite(pinPWM, 0);
+      st.WritePosEx(id, pozice, 0, 50);
     }
 };
 
@@ -68,10 +70,10 @@ fotorezistor fotorezistorN(A3);  // Nahoře
 fotorezistor fotorezistorD(A2);  // Dole 
 fotorezistor fotorezistorL(A4);  // Vlevo
 
-// Motory (piny pro řízení směru + PWM)
-motor motorX1(5, 6, 9);
-motor motorX2(7, 8, 10);
-motor motorY1(11, 12, 3);
+// Motory 
+motor motor1Y(2);
+motor motor2Y(3);
+motor motorX(1);
 
 float rozdilX;
 float rozdilY;
@@ -96,13 +98,17 @@ void setup() {
   ina2191.begin();
   ina2192.begin();
 
+  Serial1.begin(1000000, SERIAL_8N1, S_RXD, S_TXD);
+  st.pSerial = &Serial1;
+  delay(1000);
+
   
 }
 
 void loop() {
   //prectiVsechnySenzory();
   //Wire.requestFrom(0x39,16);
-  Serial.println("\n\nnew");
+  Serial.println("new");
   
 /*  while(Wire.available()){
     int c = Wire.read();
@@ -111,7 +117,7 @@ void loop() {
 
   
 
- /* float vstupVI = ina219I.getBusVoltage_V();     // Vstupní napětí senzoru 
+  float vstupVI = ina219I.getBusVoltage_V();     // Vstupní napětí senzoru 
   float bocniVI = ina219I.getShuntVoltage_mV();  // Boční (shunt) napětí senzoru 
   float zatezVI = vstupVI + (bocniVI/1000);       // Napětí zátěže
   float proudI = ina219I.getCurrent_mA();        // Proud senzoru  
@@ -126,20 +132,20 @@ void loop() {
   float zatezV2 = vstupV2 + (bocniV2/1000);       // Napětí zátěže
   float proud2 = ina2192.getCurrent_mA();        // Proud senzoru   
 
-  Serial.print("vstupní napětí: "); Serial.print(vstupVI*1000); Serial.println(" mV");
+ /* Serial.print("vstupní napětí: "); Serial.print(vstupVI*1000); Serial.println(" mV");
   Serial.print("napětí na bočníku: "); Serial.print(bocniVI); Serial.println(" mV");
   Serial.print("napětí zátěže: "); Serial.print(zatezVI); Serial.println(" V");
   Serial.print("proud: "); Serial.print(proudI); Serial.println(" mA");
-
+*/
 
   sensors_event_t event;
   tsl.getEvent(&event);
 
-  if(event.light){
+ /* if(event.light){
     Serial.print("Senzor intenzity světla: "); Serial.print(event.light); Serial.println(" Lux");
   }else{
     Serial.println("Senzor intenzity světla přetížen!");  
-  }
+  }*/
 
   if(event.light){
     Serial.println(event.light);
@@ -159,39 +165,43 @@ void loop() {
   Serial.println(vstupV2);
   Serial.println(bocniV2);
   Serial.println(zatezV2);
-  Serial.println(proud2);*/
+  if(isnan(proud2) || isinf(proud2)){
+    Serial.println(0);
+  }else{
+    Serial.println(proud2);
+  }
 
   prectiVsechnySenzory();
 
-  Serial.print("N: "); Serial.println(fotorezistorN.rezistivita);
+  /*Serial.print("N: "); Serial.println(fotorezistorN.rezistivita);
   Serial.print("D: "); Serial.println(fotorezistorD.rezistivita);
   Serial.print("L: "); Serial.println(fotorezistorL.rezistivita);
   Serial.print("P: "); Serial.println(fotorezistorP.rezistivita);
   Serial.print("RX: "); Serial.println(rozdilX);
-  Serial.print("RY: "); Serial.println(rozdilY);
+  Serial.print("RY: "); Serial.println(rozdilY);*/
 
 
 
-  delay(300);
+  delay(1000);
  /* while (rozdilVpravo / rozdilVlevo > nepresnost) {
-    motorX1.jedDopredu(100);
-    motorX2.jedDopredu(100);
+    motorX1.jedDopredu();
+    motorX2.jedDopredu();
   }
     zastavVsechnyMotory();
 
   while (rozdilVlevo / rozdilVpravo > nepresnost) {
-    motorX1.jedDozadu(100);
-    motorX2.jedDozadu(100);
+    motorX1.jedDozadu();
+    motorX2.jedDozadu();
   }
     zastavVsechnyMotory();
 
   while (rozdilDole / rozdilNahore > nepresnost) {
-    motorY1.jedDopredu(100);
+    motorY1.jedDopredu();
   }
     zastavVsechnyMotory();
 
   while (rozdilNahore / rozdilDole > nepresnost) {
-    motorY1.jedDozadu(100);
+    motorY1.jedDozadu();
   }
     zastavVsechnyMotory();*/
 
