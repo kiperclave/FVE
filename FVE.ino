@@ -95,10 +95,10 @@ float nepresnost = 1.2;
 
 void setup() {
   // Configure analog pins for input
-  pinMode(A0, INPUT);
   pinMode(A1, INPUT);
   pinMode(A2, INPUT);
   pinMode(A3, INPUT);
+  pinMode(A4, INPUT);
 
   // Initialize serial communication and I2C communication
   Serial.begin(9600);
