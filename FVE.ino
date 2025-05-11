@@ -14,9 +14,6 @@ Adafruit_INA219 ina219I(0x40); // Intensity sensor
 Adafruit_INA219 ina2191(0x41);
 Adafruit_INA219 ina2192(0x44);
 
-#define S_RXD  // Placeholder for RXD pin (to be defined)
-#define S_TXD  // Placeholder for TXD pin (to be defined)
-
 // Initialize the servo motor control library
 SMS_STS st;
 
@@ -118,7 +115,7 @@ void setup() {
   ina2192.begin();
 
   // Initialize servo communication
-  Serial1.begin(1000000, SERIAL_8N1, S_RXD, S_TXD);
+  Serial1.begin(1000000, SERIAL_8N1);
   st.pSerial = &Serial1;
   delay(1000);
 }
