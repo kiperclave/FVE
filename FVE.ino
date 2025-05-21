@@ -190,6 +190,27 @@ void loop() {
   // Read all photoresistor sensors
   prectiVsechnySenzory();
 
+  while(rozdilX>nepresnost){
+    motorX.jedDopredu();
+    aktualizujRozdily();
+  }
+  while(rozdilY>nepresnost){
+    motor1Y.jedDopredu();
+    motor2Y.jedDopredu();
+    aktualizujRozdily();
+  }
+  while(rozdilX<(-nepresnost)){
+    motorX.jedDozadu();
+    aktualizujRozdily();
+  }
+  while(rozdilY<(-nepresnost)){
+    motor1Y.jedDopredu();
+    motor2Y.jedDopredu();
+    aktualizujRozdily();
+  }
+
+  zastavVsechnyMotory();
+
   /* Uncommented portion for debugging photoresistor values
   Serial.print("Top: "); Serial.println(fotorezistorN.rezistivita);
   Serial.print("Bottom: "); Serial.println(fotorezistorD.rezistivita);
@@ -202,8 +223,7 @@ void loop() {
   delay(1000); // Delay for stability
 }
 
-// Function to read all photoresistor sensors and calculate differences
-void prectiVsechnySenzory() {
+void aktualizujRozdily(){
   fotorezistorN.ctiSenzor(); // Read the top sensor
   fotorezistorD.ctiSenzor(); // Read the bottom sensor
   fotorezistorL.ctiSenzor(); // Read the left sensor
@@ -212,6 +232,16 @@ void prectiVsechnySenzory() {
   // Calculate differences in light intensity
   rozdilX = fotorezistorL.rezistivita - fotorezistorP.rezistivita;
   rozdilY = fotorezistorN.rezistivita - fotorezistorD.rezistivita;
+}
+
+// Function to read all photoresistor sensors and calculate differences
+void prectiVsechnySenzory() {
+  aktualizujRozdily();
+
+  // Read servo position
+  motorX.prectiPozici();
+  motor1Y.prectiPozici();
+  motor2Y.prectiPozici();
 }
 
 // Function to stop all motors
