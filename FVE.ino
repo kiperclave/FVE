@@ -6,6 +6,11 @@
 #include <SoftwareSerial.h>
 #include <SCServo.h>
 
+
+// Define RX and TX pin for servo communication
+#define RxPin 17 
+#define TxPin 18
+
 // Initialize light sensor with its I2C address
 Adafruit_TSL2561_Unified tsl = Adafruit_TSL2561_Unified(TSL2561_ADDR_FLOAT, 0x39);
 
@@ -115,7 +120,7 @@ void setup() {
   ina2192.begin();
 
   // Initialize servo communication
-  Serial1.begin(1000000, SERIAL_8N1);
+  Serial1.begin(1000000, SERIAL_8N1, RxPin, TxPin);
   st.pSerial = &Serial1;
   delay(1000);
 }
