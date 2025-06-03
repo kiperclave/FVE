@@ -2,7 +2,7 @@
 
 
 # Path to database
-DB="/home/aboo/sensordata.db"
+DB="/var/www/html/sensordata.db"
 
 
 # Function to read serial data from USB port
