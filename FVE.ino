@@ -63,6 +63,11 @@ class motor {
       this->id = id;
     }
 
+    // Read position 
+    int aktualniPozice(){
+      return this->pozice;
+    }
+
     // Changes the speed of the motor
     void zmenRychlost(int rychlost) {
       this->rychlost = rychlost;
@@ -204,8 +209,12 @@ void loop() {
     aktualizujRozdily();
   }
   while(rozdilY>nepresnost){
-    motor1Y.jedDopredu();
-    motor2Y.jedDopredu();
+    if(motor1Y.aktualniPozice<3500){
+      motor1Y.jedDopredu();
+    }
+    if(motor2Y.aktualniPozice<3500){
+      motor2Y.jedDopredu();
+    }
     aktualizujRozdily();
   }
   while(rozdilX<(-nepresnost)){
@@ -213,8 +222,12 @@ void loop() {
     aktualizujRozdily();
   }
   while(rozdilY<(-nepresnost)){
-    motor1Y.jedDopredu();
-    motor2Y.jedDopredu();
+    if(motor1Y.aktualniPozice>2000){
+      motor1Y.jedDozadu();
+    }
+    if(motor2Y.aktualniPozice>2000){
+      motor2Y.jedDozadu();
+    }
     aktualizujRozdily();
   }
 
