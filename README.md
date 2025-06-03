@@ -5,8 +5,9 @@ This project is funded from Visegrad Fund.
 --- REQUIREMENTS ---
 
 1. ESP32
-2. TSL2561 sensors
-3. INA219 sensor
-4. Photoresistors
-5. ST3215 servos
-6. Raspberry Pi 4
+2. Board to convert UART to simple-duplex serial communication (eg. waveshare servo driver board)
+3. TSL2561 sensors
+4. INA219 sensor
+5. Photoresistors
+6. ST3215 servos
+7. Raspberry Pi 4
