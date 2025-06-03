@@ -6,7 +6,7 @@
 #include <SoftwareSerial.h>
 #include <SCServo.h>
 
-
+ 
 // Define RX and TX pin for servo communication
 #define RxPin 18
 #define TxPin 19
