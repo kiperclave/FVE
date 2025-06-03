@@ -8,9 +8,13 @@
 
 
 // Define RX and TX pin for servo communication
-#define RxPin 17 
-#define TxPin 18
+#define RxPin 18
+#define TxPin 19
 
+#define A1 32
+#define A2 33
+#define A3 34
+#define A4 35
 // Initialize light sensor with its I2C address
 Adafruit_TSL2561_Unified tsl = Adafruit_TSL2561_Unified(TSL2561_ADDR_FLOAT, 0x39);
 
