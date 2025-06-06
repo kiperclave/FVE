@@ -4,7 +4,7 @@ This project is funded from Visegrad Fund.
 
 --- REQUIREMENTS ---
 
-1. ESP32
+1. ESP32 (Recommended Arduino IDE ESP32 version 2.0.17)
 2. Board to convert UART to simple-duplex serial communication (eg. waveshare servo driver board)
 3. TSL2561 sensors
 4. INA219 sensor
