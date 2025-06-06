@@ -3,7 +3,6 @@
 #include <Adafruit_Sensor.h>
 #include <Adafruit_TSL2561_U.h>
 #include <Adafruit_INA219.h>
-#include <SoftwareSerial.h>
 #include <SCServo.h>
 
  
@@ -32,7 +31,7 @@ class fotorezistor {
     int pin; // Analog pin where the sensor is connected
 
   public:
-    int rezistivita; // Resistance value of the photoresistor
+    float rezistivita; // Resistance value of the photoresistor
 
     // Reads the sensor value
     void ctiSenzor() {
@@ -50,14 +49,13 @@ class motor {
   protected:
     int id;        // Motor ID
     int pozice;    // Current position of the motor
-    int rychlost;  // Motor speed
+    int rychlost = 300;  // Motor speed
 
+  public:
     // Reads the current position of the motor
     void prectiPozici() {
       this->pozice = st.ReadPos(id);
     }
-
-  public:
     // Constructor to initialize the motor with its ID
     motor(int id) {
       this->id = id;
@@ -65,6 +63,7 @@ class motor {
 
     // Read position 
     int aktualniPozice(){
+      this->pozice = st.ReadPos(id);
       return this->pozice;
     }
 
@@ -75,37 +74,38 @@ class motor {
 
     // Moves the motor forward by a fixed amount
     void jedDopredu() {
-      st.WritePosEx(id, (pozice + 100), rychlost, 50);
+      st.WritePosEx(id, (pozice + 50), rychlost, 50);
+      delay(100);
     }
 
     // Moves the motor backward by a fixed amount
     void jedDozadu() {
-      st.WritePosEx(id, (pozice - 100), rychlost, 50);
+      st.WritePosEx(id, (pozice - 50), rychlost, 50);
+      delay(100);
     }
 
-    // Stops the motor
-    void zastav() {
-      st.WritePosEx(id, pozice, 0, 50);
+    // Returns ID of servo
+    int aktualniID(){
+      return this->id;
     }
 };
 
 // Create photoresistor objects representing sensors at different positions
-fotorezistor fotorezistorP(A1);  // Photoresistor on the right
-fotorezistor fotorezistorN(A3);  // Photoresistor on the top
-fotorezistor fotorezistorD(A2);  // Photoresistor on the bottom
-fotorezistor fotorezistorL(A4);  // Photoresistor on the left
+fotorezistor fotorezistorN(A4);  // Photoresistor on the top
+fotorezistor fotorezistorD(A1);  // Photoresistor on the bottom
+fotorezistor fotorezistorL(A3);  // Photoresistor on the left
+fotorezistor fotorezistorP(A2);  // Photoresistor on the right
 
 // Create motor objects with unique IDs
-motor motorX(1);   // Motor for the X-axis
-motor motor1Y(2);  // Motor for the Y-axis (motor 1)
-motor motor2Y(3);  // Motor for the Y-axis (motor 2)
+motor motorX(2);   // Motor for the X-axis
+motor motor1Y(1);  // Motor for the Y-axis (motor 1)
 
 // Variables for storing differences in light intensity
 float rozdilX;
 float rozdilY;
 
 // Threshold for precision
-float nepresnost = 1.2;
+int nepresnost = 30;
 
 void setup() {
   // Configure analog pins for input
@@ -131,7 +131,13 @@ void setup() {
   // Initialize servo communication
   Serial1.begin(1000000, SERIAL_8N1, RxPin, TxPin);
   st.pSerial = &Serial1;
-  delay(1000);
+
+  // Sets up servos into middle possition 
+  st.WritePosEx(motor1Y.aktualniID(), 2048, 300, 50);
+  st.WritePosEx(motorX.aktualniID(), 2048, 300, 50);
+  
+  // Delay for servos to reach (near) middle 
+  delay(2000);
 }
 
 void loop() {
@@ -204,45 +210,47 @@ void loop() {
   // Read all photoresistor sensors
   prectiVsechnySenzory();
 
+  // Move servos based on light differences
+
   while(rozdilX>nepresnost){
     motorX.jedDopredu();
-    aktualizujRozdily();
+    prectiVsechnySenzory();
+    
   }
+  
   while(rozdilY>nepresnost){
-    if(motor1Y.aktualniPozice<3500){
+    if(motor1Y.aktualniPozice()<2500){
       motor1Y.jedDopredu();
     }
-    if(motor2Y.aktualniPozice<3500){
-      motor2Y.jedDopredu();
+    prectiVsechnySenzory();
+  }
+  if(rozdilX<0){
+     while(rozdilX<(-nepresnost)){
+      motorX.jedDozadu();
+      prectiVsechnySenzory();
     }
-    aktualizujRozdily();
+    
   }
-  while(rozdilX<(-nepresnost)){
-    motorX.jedDozadu();
-    aktualizujRozdily();
-  }
-  while(rozdilY<(-nepresnost)){
-    if(motor1Y.aktualniPozice>2000){
+  if(rozdilY<0){
+    while(rozdilY<(-nepresnost)){
+    if(motor1Y.aktualniPozice()>1800){
       motor1Y.jedDozadu();
     }
-    if(motor2Y.aktualniPozice>2000){
-      motor2Y.jedDozadu();
+    prectiVsechnySenzory();
     }
-    aktualizujRozdily();
   }
-
-  zastavVsechnyMotory();
-
-  /* Uncommented portion for debugging photoresistor values
-  Serial.print("Top: "); Serial.println(fotorezistorN.rezistivita);
+  
+  prectiVsechnySenzory();
+  // Uncommented portion for debugging photoresistor values
+ /* Serial.print("Top: "); Serial.println(fotorezistorN.rezistivita);
   Serial.print("Bottom: "); Serial.println(fotorezistorD.rezistivita);
   Serial.print("Left: "); Serial.println(fotorezistorL.rezistivita);
   Serial.print("Right: "); Serial.println(fotorezistorP.rezistivita);
   Serial.print("Difference X: "); Serial.println(rozdilX);
-  Serial.print("Difference Y: "); Serial.println(rozdilY);
-  */
+  Serial.print("Difference Y: "); Serial.println(rozdilY);*/
+  
 
-  delay(1000); // Delay for stability
+  delay(10000); // Delay for stability
 }
 
 void aktualizujRozdily(){
@@ -251,24 +259,62 @@ void aktualizujRozdily(){
   fotorezistorL.ctiSenzor(); // Read the left sensor
   fotorezistorP.ctiSenzor(); // Read the right sensor
 
+
+  // Calibration of photorezistors
+  fotorezistorN.rezistivita*=0.9114;
+  fotorezistorD.rezistivita*=0.9574;
+  fotorezistorL.rezistivita*=1.1803;
+  fotorezistorP.rezistivita*=1;
+
+
+  if(fotorezistorN.rezistivita<2048){
+    fotorezistorN.rezistivita = (4095-fotorezistorN.rezistivita) * 1;
+  }else{
+    fotorezistorN.rezistivita = (4095-fotorezistorN.rezistivita) * 1.1;
+  }
+
+  if(fotorezistorD.rezistivita<2048){
+    fotorezistorD.rezistivita = (4095-fotorezistorD.rezistivita) * 1;
+  }else{
+    fotorezistorD.rezistivita = (4095-fotorezistorD.rezistivita) * 1.2;
+  }
+
+  if(fotorezistorL.rezistivita<2048){
+    fotorezistorL.rezistivita = (4095-fotorezistorL.rezistivita) * 1;
+  }else{
+    fotorezistorL.rezistivita = (4095-fotorezistorL.rezistivita) * 1;
+  }
+
+  if(fotorezistorP.rezistivita<2048){
+    fotorezistorP.rezistivita = (4095-fotorezistorP.rezistivita) * 1;
+  }else{
+    fotorezistorP.rezistivita = (4095-fotorezistorP.rezistivita) * 1.05;
+  }
+
+  // Converting to int
+  fotorezistorN.rezistivita/=10;
+  fotorezistorD.rezistivita/=10;
+  fotorezistorL.rezistivita/=10;
+  fotorezistorP.rezistivita/=10;
+
+  fotorezistorN.rezistivita=(int)fotorezistorN.rezistivita;
+  fotorezistorD.rezistivita=(int)fotorezistorD.rezistivita;
+  fotorezistorL.rezistivita=(int)fotorezistorL.rezistivita;
+  fotorezistorP.rezistivita=(int)fotorezistorP.rezistivita;
+
+
+
   // Calculate differences in light intensity
-  rozdilX = fotorezistorL.rezistivita - fotorezistorP.rezistivita;
+  rozdilX = fotorezistorP.rezistivita - fotorezistorL.rezistivita;
   rozdilY = fotorezistorN.rezistivita - fotorezistorD.rezistivita;
 }
 
 // Function to read all photoresistor sensors and calculate differences
 void prectiVsechnySenzory() {
   aktualizujRozdily();
-
   // Read servo position
   motorX.prectiPozici();
   motor1Y.prectiPozici();
-  motor2Y.prectiPozici();
 }
 
-// Function to stop all motors
-void zastavVsechnyMotory() {
-  motor1Y.zastav();
-  motor2Y.zastav();
-  motorX.zastav();
-}
+
