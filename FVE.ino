@@ -28,6 +28,16 @@ Adafruit_INA219 ina219I(0x40); // Intensity sensor
 Adafruit_INA219 ina2191(0x41);
 Adafruit_INA219 ina2192(0x44);
 
+// Struct for INA219 sensor data
+struct sensorData{
+  float vstup;
+  float bocni;
+  float zatez;
+  float proud;
+};
+
+sensorData dataI, data1, data2;
+
 // Initialize the servo motor control library
 SMS_STS st;
 
@@ -164,6 +174,14 @@ void loop() {
   Serial.println("new");
 
   // Read voltage and current data from sensors
+
+  nactiDataZeSenzoru(ina219I, dataI);
+  nactiDataZeSenzoru(ina2191, data1);
+  nactiDataZeSenzoru(ina2192, data2);
+
+
+  // Old sensor reading
+  /*
   float vstupVI = ina219I.getBusVoltage_V();     // Input voltage of sensor
   float bocniVI = ina219I.getShuntVoltage_mV();  // Shunt voltage of sensor
   float zatezVI = vstupVI + (bocniVI / 1000);    // Load voltage
@@ -178,7 +196,7 @@ void loop() {
   float bocniV2 = ina2192.getShuntVoltage_mV();  // Shunt voltage of sensor
   float zatezV2 = vstupV2 + (bocniV2 / 1000);    // Load voltage
   float proud2 = ina2192.getCurrent_mA();        // Current from sensor
-
+*/
   /* Uncommented portion for debugging purposes
   Serial.print("Input voltage: "); Serial.print(vstupVI * 1000); Serial.println(" mV");
   Serial.print("Shunt voltage: "); Serial.print(bocniVI); Serial.println(" mV");
@@ -207,24 +225,20 @@ void loop() {
     Serial.println(NULL); // Indicate sensor overload
   }
 
-  Serial.println(vstupVI);
-  Serial.println(bocniVI);
-  Serial.println(zatezVI);
-  Serial.println(proudI);
+  Serial.println(dataI.vstup);  // Input voltage of sensor
+  Serial.println(dataI.bocni);  // Shunt voltage of sensor
+  Serial.println(dataI.zatez);  // Load voltage
+  Serial.println(dataI.proud);  // Current from sensor
 
-  Serial.println(vstupV1);
-  Serial.println(bocniV1);
-  Serial.println(zatezV1);
-  Serial.println(proud1);
+  Serial.println(data1.vstup);
+  Serial.println(data1.bocni);
+  Serial.println(data1.zatez);
+  Serial.println(data1.proud);
 
-  Serial.println(vstupV2);
-  Serial.println(bocniV2);
-  Serial.println(zatezV2);
-
-  if (isnan(proud2) || isinf(proud2)) {
-    proud2=0;
-  }
-  Serial.println(proud2);
+  Serial.println(data2.vstup);
+  Serial.println(data2.bocni);
+  Serial.println(data2.zatez);
+  Serial.println(data2.proud);
 
   // Read all photoresistor sensors
   prectiVsechnySenzory();
@@ -347,4 +361,15 @@ void prectiVsechnySenzory() {
   // Read servo position
   motorX.prectiPozici();
   motor1Y.prectiPozici();
+}
+
+void nactiDataZeSenzoru(Adafruit_INA219& senzor, sensorData& data){
+  data.vstup = senzor.getBusVoltage_V();
+  data.bocni = senzor.getShuntVoltage_mV();
+  data.zatez = data.vstup + (data.bocni/1000);
+  data.proud = senzor.getCurrent_mA();
+
+  if(isnan(data.proud) || isinf(data.proud)){
+    data.proud = 0;
+  }
 }
