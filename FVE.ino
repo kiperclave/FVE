@@ -222,10 +222,9 @@ void loop() {
   Serial.println(zatezV2);
 
   if (isnan(proud2) || isinf(proud2)) {
-    Serial.println(0); // Handle invalid current values
-  } else {
-    Serial.println(proud2);
+    proud2=0;
   }
+  Serial.println(proud2);
 
   // Read all photoresistor sensors
   prectiVsechnySenzory();
@@ -282,9 +281,9 @@ void aktualizujRozdily(){
 
   // Calibration of photorezistors
   fotorezistorN.kalibrujFotorezistor(0.9114,1,1.1);
-  fotorezistorN.kalibrujFotorezistor(0.9574,1,1.2);
-  fotorezistorN.kalibrujFotorezistor(1.1803,1,1);
-  fotorezistorN.kalibrujFotorezistor(1,1,1.05);
+  fotorezistorD.kalibrujFotorezistor(0.9574,1,1.2);
+  fotorezistorL.kalibrujFotorezistor(1.1803,1,1);
+  fotorezistorP.kalibrujFotorezistor(1,1,1.05);
 
 
 
